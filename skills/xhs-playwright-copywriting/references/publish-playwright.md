@@ -33,6 +33,30 @@ If QR login is needed:
 
 Important practical result: the login session from `www.xiaohongshu.com` carries over to the creator platform.
 
+### Critical QR-login caveat: keep the session alive
+
+A QR screenshot is **not enough by itself**. If you capture the QR and then close the page/browser/context, the code may still look scannable in chat but the backend login session can already be dead or expired. The user scans what looks like a valid code, but login fails.
+
+Use this safer pattern instead:
+
+1. Open the login modal and confirm the QR is visible.
+2. **Keep that exact browser page/context running** while the user scans.
+3. Send the QR image (or modal screenshot) to the user **without closing the session**.
+4. Wait for either:
+   - the login modal to disappear,
+   - logged-in UI to appear, or
+   - cookie/auth state to update.
+5. Only after login is confirmed should you move on to creator actions or tear down the waiting session.
+
+Practical rule: **do not send a QR from a one-shot script that exits immediately after screenshotting** unless another persistent watcher page is still alive and holding the same login flow open.
+
+If the user says the QR failed, suspect one of these first:
+
+- the QR expired naturally,
+- the page/browser/context that generated it was already closed,
+- the screenshot was old and not freshly generated,
+- the modal switched state and the captured code no longer matched the active session.
+
 ## 3. Browser/profile best practice
 
 Use a persistent Playwright profile directory so login survives between steps.
